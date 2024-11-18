@@ -1,82 +1,193 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <time.h>
+#include <ctype.h>
 
-//AFFICHER LE MOTS DE PASSE
+// Constantes
+#define MAX_MOTS 100
+#define TAILLE_MAX_MOT 50
+#define MAX_ESSAIS 10
 
-void afficherMotCache(char* motSecret, int* lettresDevinees) {
-    int longueur = strlen(motSecret);
-    for (int i = 0; i < longueur; i++) {
-        if (lettresDevinees[i]) {
-            printf("%c ", motSecret[i]);
-        } else {
-            printf("_ ");
+// Prototypes
+void afficherMotCache(const char* motSecret, const int* lettresDevinées, int taille);
+void afficherPendu(int essaisRestants);
+char lireLettre();
+int validerLettre(const char* motSecret, char lettre, int* lettresDevinées, int taille);
+void jouerUnePartie(int niveau, int* score);
+void sauvegarderScore(const char* nomJoueur, int score);
+void chargerMots(const char* fichier, char mots[][TAILLE_MAX_MOT], int* nbMots);
+int choisirDifficulte();
+char* choisirMot(char mots[][TAILLE_MAX_MOT], int nbMots);
+
+int main() {
+    int choix;
+    int score = 0;
+    char nomJoueur[50];
+    char mots[MAX_MOTS][TAILLE_MAX_MOT];
+    int nbMots = 0;
+
+    printf("Bienvenue dans le jeu du pendu !\n");
+    printf("Entrez votre nom : ");
+    scanf("%s", nomJoueur);
+
+    // Charger les mots depuis un fichier
+    chargerMots("mots.txt", mots, &nbMots);
+
+    // Menu principal
+    do {
+        printf("\nMenu :\n");
+        printf("1. Jouer une partie\n");
+        printf("2. Afficher les scores\n");
+        printf("3. Quitter\n");
+        printf("Choix : ");
+        scanf("%d", &choix);
+
+        switch (choix) {
+            case 1: {
+                int niveau = choisirDifficulte();
+                jouerUnePartie(niveau, &score);
+                sauvegarderScore(nomJoueur, score);
+                break;
+            }
+            case 2:
+                printf("Affichage des scores (à implémenter).\n");
+                break;
+            case 3:
+                printf("Merci d'avoir joué !\n");
+                break;
+            default:
+                printf("Choix invalide, réessayez.\n");
         }
+    } while (choix != 3);
+
+    return 0;
+}
+
+// Fonction pour afficher le mot caché
+void afficherMotCache(const char* motSecret, const int* lettresDevinées, int taille) {
+    for (int i = 0; i < taille; i++) {
+        if (lettresDevinées[i])
+            printf("%c ", motSecret[i]);
+        else
+            printf("_ ");
     }
     printf("\n");
 }
 
-//Affichage du pendu
-
+// Fonction pour afficher l'état du pendu
 void afficherPendu(int essaisRestants) {
-    switch (essaisRestants) {
-        case 6:
-            printf(" +---+\n     |\n     |\n     |\n    ===\n");
-            break;
-        case 5:
-            printf(" +---+\n O   |\n     |\n     |\n    ===\n");
-            break;
-        case 4:
-            printf(" +---+\n O   |\n |   |\n     |\n    ===\n");
-            break;
-        case 3:
-            printf(" +---+\n O   |\n/|   |\n     |\n    ===\n");
-            break;
-        case 2:
-            printf(" +---+\n O   |\n/|\\  |\n     |\n    ===\n");
-            break;
-        case 1:
-            printf(" +---+\n O   |\n/|\\  |\n/    |\n    ===\n");
-            break;
-        case 0:
-            printf(" +---+\n O   |\n/|\\  |\n/ \\  |\n    ===\n");
-            break;
-    }
+    const char* pendu[] = {
+        "  ----\n  |  |\n  |   \n  |   \n  |   \n /|\\ \n",
+        "  ----\n  |  |\n  |  O\n  |   \n  |   \n /|\\ \n",
+        "  ----\n  |  |\n  |  O\n  |  |\n  |   \n /|\\ \n",
+        "  ----\n  |  |\n  |  O\n  | /|\n  |   \n /|\\ \n",
+        "  ----\n  |  |\n  |  O\n  | /|\\\n  |   \n /|\\ \n",
+        "  ----\n  |  |\n  |  O\n  | /|\\\n  | / \n /|\\ \n",
+        "  ----\n  |  |\n  |  O\n  | /|\\\n  | / \\\n /|\\ \n"
+    };
+    int index = 6 - essaisRestants;
+    printf("%s\n", pendu[index]);
 }
 
-
-
-// Gestion des entrées utilisateur
+// Fonction pour lire une lettre
 char lireLettre() {
     char lettre;
     printf("Entrez une lettre : ");
     scanf(" %c", &lettre);
-    // Validation de l'entrée
-    if ((lettre >= 'a' && lettre <= 'z') || (lettre >= 'A' && lettre <= 'Z')) {
-        return lettre;
-    } else {
-        printf("Entrée invalide. Veuillez entrer une lettre.\n");
-        return lireLettre(); // Recommence si l'entrée n'est pas valide
-    }
+    return tolower(lettre);
 }
 
-//Exemple d'utilisation
+// Fonction pour valider une lettre
+int validerLettre(const char* motSecret, char lettre, int* lettresDevinées, int taille) {
+    int correct = 0;
+    for (int i = 0; i < taille; i++) {
+        if (motSecret[i] == lettre && !lettresDevinées[i]) {
+            lettresDevinées[i] = 1;
+            correct = 1;
+        }
+    }
+    return correct;
+}
 
-int main() {
-    char motSecret[] = "programmation";
-    int lettresDevinees[14] = {0}; // Initialiser à 0, aucune lettre devinée
-    int essaisRestants = 6;
+// Fonction pour jouer une partie
+void jouerUnePartie(int niveau, int* score) {
+    char mots[MAX_MOTS][TAILLE_MAX_MOT];
+    int nbMots = 0;
+    int essaisRestants;
+    int lettresDevinées[TAILLE_MAX_MOT] = {0};
 
-    // Exemple de boucle de jeu simple
+    // Charger les mots et choisir la difficulté
+    chargerMots("mots.txt", mots, &nbMots);
+    essaisRestants = MAX_ESSAIS - niveau * 2;
+
+    // Choisir un mot
+    char* motSecret = choisirMot(mots, nbMots);
+    int tailleMot = strlen(motSecret);
+
+    // Début de la partie
+    printf("\nLe mot contient %d lettres.\n", tailleMot);
     while (essaisRestants > 0) {
-        afficherMotCache(motSecret, lettresDevinees);
+        afficherMotCache(motSecret, lettresDevinées, tailleMot);
         afficherPendu(essaisRestants);
 
         char lettre = lireLettre();
-        // Ajoute ici la logique pour vérifier la lettre et mettre à jour lettresDevinees
+        if (!validerLettre(motSecret, lettre, lettresDevinées, tailleMot)) {
+            essaisRestants--;
+            printf("Lettre incorrecte. Il vous reste %d essais.\n", essaisRestants);
+        }
 
-        // Exemple de décompte d'essais si la lettre est incorrecte
-        essaisRestants--; // À ajuster selon la logique réelle de ton jeu
+        // Vérifier si toutes les lettres sont trouvées
+        int toutesTrouvees = 1;
+        for (int i = 0; i < tailleMot; i++) {
+            if (!lettresDevinées[i]) {
+                toutesTrouvees = 0;
+                break;
+            }
+        }
+        if (toutesTrouvees) {
+            printf("Félicitations ! Vous avez trouvé le mot : %s\n", motSecret);
+            *score += essaisRestants * 10;
+            return;
+        }
     }
+    printf("Dommage, vous avez perdu ! Le mot était : %s\n", motSecret);
+}
 
-    return 0;
+// Fonction pour sauvegarder un score
+void sauvegarderScore(const char* nomJoueur, int score) {
+    FILE* fichier = fopen("scores.txt", "a");
+    if (fichier) {
+        fprintf(fichier, "%s : %d\n", nomJoueur, score);
+        fclose(fichier);
+    }
+}
+
+// Fonction pour charger les mots depuis un fichier
+void chargerMots(const char* fichier, char mots[][TAILLE_MAX_MOT], int* nbMots) {
+    FILE* f = fopen(fichier, "r");
+    if (f) {
+        while (fscanf(f, "%s", mots[*nbMots]) != EOF) {
+            (*nbMots)++;
+        }
+        fclose(f);
+    }
+}
+
+// Fonction pour choisir la difficulté
+int choisirDifficulte() {
+    int niveau;
+    printf("Choisissez un niveau de difficulté :\n");
+    printf("1. Facile\n");
+    printf("2. Moyen\n");
+    printf("3. Difficile\n");
+    printf("Votre choix : ");
+    scanf("%d", &niveau);
+    return niveau - 1;
+}
+
+// Fonction pour choisir un mot aléatoirement
+char* choisirMot(char mots[][TAILLE_MAX_MOT], int nbMots) {
+    srand(time(NULL));
+    return mots[rand() % nbMots];
 }
