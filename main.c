@@ -16,23 +16,19 @@ char lireLettre();
 int validerLettre(const char* motSecret, char lettre, int* lettresDevinées, int taille);
 void jouerUnePartie(int niveau, int* score);
 void sauvegarderScore(const char* nomJoueur, int score);
-void chargerMots(const char* fichier, char mots[][TAILLE_MAX_MOT], int* nbMots);
-int choisirDifficulte();
+void chargerMotsParNiveau(int niveau, char mots[][TAILLE_MAX_MOT], int* nbMots); // Modification : Chargement par niveau
 char* choisirMot(char mots[][TAILLE_MAX_MOT], int nbMots);
+int choisirDifficulte();
+int genererNombreAleatoire(); // Modification : Ajout de la génération aléatoire
 
 int main() {
     int choix;
     int score = 0;
     char nomJoueur[50];
-    char mots[MAX_MOTS][TAILLE_MAX_MOT];
-    int nbMots = 0;
 
     printf("Bienvenue dans le jeu du pendu !\n");
     printf("Entrez votre nom : ");
     scanf("%s", nomJoueur);
-
-    // Charger les mots depuis un fichier
-    chargerMots("mots.txt", mots, &nbMots);
 
     // Menu principal
     do {
@@ -110,6 +106,36 @@ int validerLettre(const char* motSecret, char lettre, int* lettresDevinées, int 
     return correct;
 }
 
+// Fonction pour générer un nombre aléatoire (Ajouté)
+int genererNombreAleatoire() {
+    srand(time(NULL));
+    return rand() % 100;
+}
+
+// Fonction pour charger les mots selon le niveau (Modification)
+void chargerMotsParNiveau(int niveau, char mots[][TAILLE_MAX_MOT], int* nbMots) {
+    char nomFichier[20];
+    snprintf(nomFichier, sizeof(nomFichier), "niveau%d.txt", niveau); // Charge un fichier spécifique au niveau
+
+    FILE* fichier = fopen(nomFichier, "r");
+    if (fichier == NULL) {
+        printf("Erreur : Impossible d'ouvrir le fichier %s.\n", nomFichier);
+        exit(1);
+    }
+
+    *nbMots = 0;
+    while (fscanf(fichier, "%s", mots[*nbMots]) != EOF) {
+        (*nbMots)++;
+    }
+    fclose(fichier);
+}
+
+// Fonction pour choisir un mot selon le niveau (Modification)
+char* choisirMot(char mots[][TAILLE_MAX_MOT], int nbMots) {
+    int indexAleatoire = genererNombreAleatoire() % nbMots;
+    return mots[indexAleatoire];
+}
+
 // Fonction pour jouer une partie
 void jouerUnePartie(int niveau, int* score) {
     char mots[MAX_MOTS][TAILLE_MAX_MOT];
@@ -117,16 +143,16 @@ void jouerUnePartie(int niveau, int* score) {
     int essaisRestants;
     int lettresDevinées[TAILLE_MAX_MOT] = {0};
 
-    // Charger les mots et choisir la difficulté
-    chargerMots("mots.txt", mots, &nbMots);
+    // Charger les mots pour le niveau choisi
+    chargerMotsParNiveau(niveau, mots, &nbMots);
     essaisRestants = MAX_ESSAIS - niveau * 2;
 
     // Choisir un mot
     char* motSecret = choisirMot(mots, nbMots);
     int tailleMot = strlen(motSecret);
 
-    // Début de la partie
     printf("\nLe mot contient %d lettres.\n", tailleMot);
+
     while (essaisRestants > 0) {
         afficherMotCache(motSecret, lettresDevinées, tailleMot);
         afficherPendu(essaisRestants);
@@ -137,7 +163,6 @@ void jouerUnePartie(int niveau, int* score) {
             printf("Lettre incorrecte. Il vous reste %d essais.\n", essaisRestants);
         }
 
-        // Vérifier si toutes les lettres sont trouvées
         int toutesTrouvees = 1;
         for (int i = 0; i < tailleMot; i++) {
             if (!lettresDevinées[i]) {
@@ -154,26 +179,6 @@ void jouerUnePartie(int niveau, int* score) {
     printf("Dommage, vous avez perdu ! Le mot était : %s\n", motSecret);
 }
 
-// Fonction pour sauvegarder un score
-void sauvegarderScore(const char* nomJoueur, int score) {
-    FILE* fichier = fopen("scores.txt", "a");
-    if (fichier) {
-        fprintf(fichier, "%s : %d\n", nomJoueur, score);
-        fclose(fichier);
-    }
-}
-
-// Fonction pour charger les mots depuis un fichier
-void chargerMots(const char* fichier, char mots[][TAILLE_MAX_MOT], int* nbMots) {
-    FILE* f = fopen(fichier, "r");
-    if (f) {
-        while (fscanf(f, "%s", mots[*nbMots]) != EOF) {
-            (*nbMots)++;
-        }
-        fclose(f);
-    }
-}
-
 // Fonction pour choisir la difficulté
 int choisirDifficulte() {
     int niveau;
@@ -183,11 +188,14 @@ int choisirDifficulte() {
     printf("3. Difficile\n");
     printf("Votre choix : ");
     scanf("%d", &niveau);
-    return niveau - 1;
+    return niveau;
 }
 
-// Fonction pour choisir un mot aléatoirement
-char* choisirMot(char mots[][TAILLE_MAX_MOT], int nbMots) {
-    srand(time(NULL));
-    return mots[rand() % nbMots];
+// Fonction pour sauvegarder un score
+void sauvegarderScore(const char* nomJoueur, int score) {
+    FILE* fichier = fopen("scores.txt", "a");
+    if (fichier) {
+        fprintf(fichier, "%s : %d\n", nomJoueur, score);
+        fclose(fichier);
+    }
 }
