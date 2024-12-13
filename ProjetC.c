@@ -33,10 +33,10 @@ int main() {
                 afficherScores();
                 break;
             case 3:
-                printf("\nMerci d'avoir joué. A bientôt !\n");
+                printf("\nMerci d'avoir jouÃ©. A bientÃ´t !\n");
                 break;
             default:
-                printf("\nChoix invalide, veuillez réessayer.\n");
+                printf("\nChoix invalide, veuillez rÃ©essayer.\n");
         }
     } while (choix != 3);
 
@@ -64,7 +64,7 @@ void jouerPartie() {
     printf("\nEntrez votre nom : ");
     fgets(nomJoueur, sizeof(nomJoueur), stdin);
     nomJoueur[strcspn(nomJoueur, "\n")] = '\0'; // Supprimer le \n
-    printf("\nChoisissez un niveau de difficulté (1 = Facile, 2 = Moyen, 3 = Difficile) : ");
+    printf("\nChoisissez un niveau de difficultÃ© (1 = Facile, 2 = Moyen, 3 = Difficile) : ");
     int niveau;
     scanf("%d", &niveau);
     getchar(); // Consommer le \n restant
@@ -81,7 +81,7 @@ void jouerPartie() {
             fichierMots = "niveau3.txt";
             break;
         default:
-            printf("Niveau invalide. Par défaut, niveau Facile sera utilisé.\n");
+            printf("Niveau invalide. Par dÃ©faut, niveau Facile sera utilisÃ©.\n");
             fichierMots = "niveau1.txt";
     }
 
@@ -92,7 +92,7 @@ void jouerPartie() {
     }
 
     while (tentativesRestantes > 0 && !motTrouve) {
-        printf("\nMot à deviner : ");
+        printf("\nMot Ã  deviner : ");
         afficherMotCache(mot, lettresTrouvees);
 
         printf("\nTentatives restantes : %d\n", tentativesRestantes);
@@ -107,13 +107,13 @@ void jouerPartie() {
         }
 
         if (verifierLettre(lettre, mot, lettresTrouvees)) {
-            printf("\nBonne réponse !\n");
+            printf("\nBonne rÃ©ponse !\n");
         } else {
             printf("\nLettre incorrecte.\n");
             tentativesRestantes--;
         }
 
-        // Vérifier si le mot est entièrement découvert
+        // VÃ©rifier si le mot est entiÃ¨rement dÃ©couvert
         motTrouve = 1;
         for (int i = 0; mot[i] != '\0'; i++) {
             if (!lettresTrouvees[i]) {
@@ -124,10 +124,10 @@ void jouerPartie() {
     }
 
     if (motTrouve) {
-        printf("\nFélicitations, vous avez trouvé le mot : %s\n", mot);
+        printf("\nFÃ©licitations, vous avez trouvÃ© le mot : %s\n", mot);
         sauvegarderScore(nomJoueur, tentativesRestantes);
     } else {
-        printf("\nDommage, vous avez perdu. Le mot était : %s\n", mot);
+        printf("\nDommage, vous avez perdu. Le mot Ã©tait : %s\n", mot);
     }
 
     free(mot);
@@ -161,7 +161,7 @@ void sauvegarderScore(const char *nom, int score) {
     fclose(fichier);
 }
 
-// Choisir un mot aléatoire depuis un fichier
+// Choisir un mot alÃ©atoire depuis un fichier
 char *choisirMot(const char *fichier) {
     FILE *f = fopen(fichier, "r");
     if (!f) {
@@ -197,7 +197,7 @@ char *choisirMot(const char *fichier) {
     return motChoisi;
 }
 
-// Afficher le mot caché avec les lettres trouvées
+// Afficher le mot cachÃ© avec les lettres trouvÃ©es
 void afficherMotCache(const char *mot, const int lettresTrouvees[]) {
     for (int i = 0; mot[i] != '\0'; i++) {
         if (lettresTrouvees[i]) {
@@ -209,7 +209,7 @@ void afficherMotCache(const char *mot, const int lettresTrouvees[]) {
     printf("\n");
 }
 
-// Vérifier si une lettre est dans le mot
+// VÃ©rifier si une lettre est dans le mot
 int verifierLettre(char lettre, const char *mot, int lettresTrouvees[]) {
     int trouve = 0;
     for (int i = 0; mot[i] != '\0'; i++) {
