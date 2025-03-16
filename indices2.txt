@@ -1,0 +1,5 @@
+montagne:Elevation naturelle du sol
+ordinateur:Machine qui execute des programmes
+cerisier:Arbre qui produit des petits fruits rouges
+pantoufle:Chaussure d’interieur confortable
+banquise:Glace flottante dans les regions polaires

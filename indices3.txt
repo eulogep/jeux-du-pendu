@@ -1,0 +1,5 @@
+hippopotame:Gros animal semi-aquatique d’Afrique
+electrochimie:Science des réactions electriques et chimiques
+magnetisme:Force qui attire les objets métalliques
+parallelepipede:Forme geometrique en 3D avec 6 faces rectangulaires
+infrastructure:Ensemble des équipements d’un pays ou d’une ville

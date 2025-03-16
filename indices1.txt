@@ -1,0 +1,5 @@
+chat:Petit felin domestique
+arbre:Plante avec un tronc et des feuilles
+pomme:Fruit rouge ou vert souvent associe à Newton
+neige:Precipitation blanche en hiver
+livre:Objet contenant des pages remplies de texte
